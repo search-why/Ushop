@@ -6,6 +6,10 @@ import actions from './actions'
 import { state, mutations, getters } from './mutations'
 import cate from './modules/cate'
 import specs from './modules/specs'
+import vip from './modules/vip'
+import banner from './modules/banner'
+import goods from './modules/goods'
+import seckill from './modules/seckill'
 
 export default new Vuex.Store({
     actions,
@@ -14,6 +18,10 @@ export default new Vuex.Store({
     getters,
     modules: {
         cate,
-        specs
+        specs,
+        vip,
+        banner,
+        goods,
+        seckill
     }
 })

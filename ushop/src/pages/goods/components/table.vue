@@ -8,9 +8,9 @@
       :tree-props="{children: 'children'}"
     >
       <el-table-column prop="id" label="商品编号"></el-table-column>
-      <el-table-column prop="catename" label="商品名称"></el-table-column>
-      <el-table-column prop="catename" label="商品价格"></el-table-column>
-      <el-table-column prop="catename" label="市场价格"></el-table-column>
+      <el-table-column prop="goodsname" label="商品名称"></el-table-column>
+      <el-table-column prop="price" label="商品价格"></el-table-column>
+      <el-table-column prop="market_price" label="市场价格"></el-table-column>
       <el-table-column label="图片">
           <template slot-scope="scope">
             <img :src="$imgPre+scope.row.img" alt="">
@@ -18,13 +18,13 @@
         </el-table-column>
       <el-table-column label="是否新品">
         <template slot-scope="scope">
-          <el-button type="primary" v-if="scope.row.status===1">是</el-button>
+          <el-button type="primary" v-if="scope.row.isnew===1">是</el-button>
           <el-button type="danger" v-else>否</el-button>
         </template>
       </el-table-column>
       <el-table-column label="是否热卖">
         <template slot-scope="scope">
-          <el-button type="primary" v-if="scope.row.status===1">是</el-button>
+          <el-button type="primary" v-if="scope.row.ishot===1">是</el-button>
           <el-button type="danger" v-else>否</el-button>
         </template>
       </el-table-column>
@@ -46,24 +46,25 @@
 
 <script>
 import { mapGetters, mapActions } from "vuex";
-import { reqCateDel } from "../../../utils/http";
+import { reqGoodsDel } from "../../../utils/http";
 import { successAlert } from "../../../utils/alert";
 export default {
   computed: {
     ...mapGetters({
-      list: "cate/list",
+      list: "goods/list",
     }),
   },
   methods: {
     ...mapActions({
-      reqList: "cate/reqList",
+      reqGoodsList: "goods/reqList",
+      reqGoodsCount: "goods/reqCount",
     }),
     del(id) {
-      reqCateDel(id).then((res) => {
-        console.log(res);
+      reqGoodsDel(id).then((res) => {
         if (res.data.code === 200) {
           successAlert(res.data.msg);
-          this.reqList();
+          this.reqGoodsList();
+          this.reqGoodsCount()
         }
       });
     },
@@ -73,7 +74,7 @@ export default {
   },
   mounted() {
     //一进来发起请求
-    this.reqList();
+    this.reqGoodsList();
   },
 };
 </script>

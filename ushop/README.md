@@ -1,21 +1,39 @@
-# ushop
+# 登录
 
-> A Vue.js project
+验证 OK  拦截  OK
 
-## Build Setup
+# 轮播图
 
-``` bash
-# install dependencies
-npm install
+增删改查  OK
 
-# serve with hot reload at localhost:8080
-npm run dev
+# 商品分类
 
-# build for production with minification
-npm run build
+增删改查   OK
 
-# build for production and view the bundle analyzer report
-npm run build --report
-```
+# 主页图标
 
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+OK
+
+# 管理员管理
+
+增删改查  OK
+
+# 角色管理
+
+增删改查  OK
+
+# 菜单管理
+
+增删改查  OK
+
+# 商品规格
+
+增删改查  OK
+
+# 会员管理
+
+增删改查  OK
+
+# 秒杀活动
+
+增删查  OK  修改里面的日期有问题

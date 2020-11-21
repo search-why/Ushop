@@ -1,8 +1,8 @@
 <template>
   <div class="form">
     <el-dialog :title="info.title" :visible.sync="info.isShow" @closed="closed" @opened="opened">
-      <el-form :model="goods">
-        <el-form-item label="一级分类" label-width="120px">
+      <el-form :model="goods" :rules="rules">
+        <el-form-item label="一级分类" label-width="120px" prop="first_cateid">
           <el-select v-model="goods.first_cateid" placeholder="请选择" @change="changeFirst">
             <el-option
               v-for="item in cateList"
@@ -12,23 +12,23 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="二级分类" label-width="120px">
+        <el-form-item label="二级分类" label-width="120px" prop="second_cateid">
           <el-select v-model="goods.second_cateid" placeholder="请选择">
             <el-option
-              v-for="item in cateList"
+              v-for="item in secondId"
               :key="item.id"
               :label="item.catename"
               :value="item.id"
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="商品名称" label-width="120px">
+        <el-form-item label="商品名称" label-width="120px" prop="goodsname">
           <el-input v-model="goods.goodsname" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="商品价格" label-width="120px">
+        <el-form-item label="商品价格" label-width="120px" prop="price">
           <el-input v-model="goods.price" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="市场价格" label-width="120px">
+        <el-form-item label="市场价格" label-width="120px" prop="market_price">
           <el-input v-model="goods.market_price" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="图片" label-width="120px">
@@ -42,36 +42,31 @@
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
         </el-form-item>
-        <el-form-item label="商品规格" label-width="120px">
-          <el-select v-model="goods.specsid" placeholder="请选择">
+        <el-form-item label="商品规格" label-width="120px" prop="specsid">
+          <el-select v-model="goods.specsid" placeholder="请选择" @change="changespecs">
             <el-option
-              v-for="item in cateList"
+              v-for="item in specsList"
               :key="item.id"
-              :label="item.catename"
+              :label="item.specsname"
               :value="item.id"
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="规格属性" label-width="120px">
-          <el-select v-model="goods.specsattr" placeholder="请选择">
-            <el-option
-              v-for="item in cateList"
-              :key="item.id"
-              :label="item.catename"
-              :value="item.id"
-            ></el-option>
+        <el-form-item label="规格属性" label-width="120px" prop="specsattr">
+          <el-select v-model="goods.specsattr" placeholder="请选择" multiple>
+            <el-option v-for="item in attrList" :key="item" :label="item" :value="item"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="是否热卖" label-width="120px">
           <template>
-            <el-radio v-model="goods.isnew" label="1">是</el-radio>
-            <el-radio v-model="goods.isnew" label="2">否</el-radio>
+            <el-radio v-model="goods.isnew" :label="1">是</el-radio>
+            <el-radio v-model="goods.isnew" :label="2">否</el-radio>
           </template>
         </el-form-item>
         <el-form-item label="是否新品" label-width="120px">
           <template>
-            <el-radio v-model="goods.ishot" label="1">是</el-radio>
-            <el-radio v-model="goods.ishot" label="2">否</el-radio>
+            <el-radio v-model="goods.ishot" :label="1">是</el-radio>
+            <el-radio v-model="goods.ishot" :label="2">否</el-radio>
           </template>
         </el-form-item>
         <el-form-item label="状态" label-width="120px">
@@ -96,82 +91,210 @@
 import E from "wangeditor";
 import { routes } from "../../../router/index";
 import { mapGetters, mapActions } from "vuex";
-import { reqGoodsAdd, reqCateDetail, reqCateEdit } from "../../../utils/http";
+import {
+  reqGoodsAdd,
+  reqCateList,
+  reqGoodsDetail,
+  reqGoodsUpdate,
+} from "../../../utils/http";
 import { successAlert, errorAlert } from "../../../utils/alert";
 export default {
   data() {
     return {
+      rules: {
+        first_cateid: [
+          { required: true, message: "请输入一级分类", trigger: "change" },
+        ],
+        second_cateid: [
+          { required: true, message: "请输入二级分类", trigger: "change" },
+        ],
+        goodsname: [
+          { required: true, message: "请输入商品名称", trigger: "blur" },
+        ],
+        price: [{ required: true, message: "请输入商品价格", trigger: "blur" }],
+        market_price: [
+          { required: true, message: "请输入商品市场价格", trigger: "blur" },
+        ],
+        specsid: [
+          { required: true, message: "请输入商品规格", trigger: "change" },
+        ],
+        specsattr: [
+          {
+            type: "array",
+            required: true,
+            message: "请至少选择一个规格属性",
+            trigger: "change",
+          },
+        ],
+      },
       goods: {
         first_cateid: "",
         second_cateid: "",
         goodsname: "",
         price: "",
         market_price: "",
-        img: "",
+        img: null,
         description: "",
         specsid: "",
-        specsattr: "",
-        isnew: "",
-        ishot: "",
+        specsattr: [],
+        isnew: 1,
+        ishot: 1,
         status: 1,
       },
       imgUrl: "",
+      // 二级菜单
+      secondId: [],
+      // 规格属性列表
+      attrList: [],
+      attrArr: [{ value: "" }],
     };
   },
   computed: {
     ...mapGetters({
       cateList: "cate/list",
+      specsList: "specs/list",
     }),
   },
   props: ["info"],
   methods: {
     ...mapActions({
-      reqCateList: "cate/reqList",
-      
+      // store里面的reqList函数
+      reqcateList: "cate/reqList",
+      reqspecsList: "specs/reqList",
+      reqGoodsList: "goods/reqList",
+      reqGoodsCount: "goods/reqCount",
     }),
-    changeFirst(){
-      
+    changeFirst() {
+      this.goods.second_cateid = "";
+      this.getSecondId();
+    },
+    changespecs() {
+      // 获取商品规格的属性
+      this.goods.specsattr = [];
+      this.getSpecs();
+    },
+    // 获取二级菜单
+    getSecondId() {
+      // http里面的reqCateList函数
+      reqCateList({ pid: this.goods.first_cateid }).then((res) => {
+        console.log(res);
+        this.secondId = res.data.list;
+      });
+    },
+    getSpecs() {
+      let obj = this.specsList.find((item) => item.id === this.goods.specsid);
+      this.attrList = obj.attrs;
+    },
+    addAttr() {
+      this.attrArr.push({
+        value: "",
+      });
+    },
+    //删除商品属性
+    delAttr(index) {
+      this.attrArr.splice(index, 1);
+    },
+    //验证
+    check() {
+      return new Promise((resolve, reject) => {
+        //验证
+        if (this.goods.first_cateid === "") {
+          errorAlert("一级分类不能为空");
+          return;
+        }
+        if (this.goods.second_cateid === "") {
+          errorAlert("二级分类不能为空");
+          return;
+        }
+        if (this.goods.goodsname === "") {
+          errorAlert("商品名称为空");
+          return;
+        }
+        if (this.goods.price === "") {
+          errorAlert("商品价格为空");
+          return;
+        }
+        if (this.goods.market_price === "") {
+          errorAlert("商品市场价格为空");
+          return;
+        }
+        if (!this.goods.img) {
+          errorAlert("请选择图片");
+          return;
+        }
+        if (this.goods.specsid === "") {
+          errorAlert("请选择商品规格");
+          return;
+        }
+        if (this.goods.specsattr.length === 0) {
+          errorAlert("请选择商品属性");
+          return;
+        }
+        if (this.editor.txt.html() === "") {
+          errorAlert("请输入商品描述");
+          return;
+        }
+        resolve();
+      });
     },
     add() {
-      reqGoodsAdd(this.goods).then((res) => {
-        console.log(3333);
-        if (res.data.code === 200) {
-          //弹个成功
+      this.check().then(() => {
+        this.goods.description = this.editor.txt.text();
+        reqGoodsAdd(this.goods).then((res) => {
           successAlert(res.data.msg);
-          //弹框消失
-          this.cancel();
-          //form置空
           this.empty();
-          //24.通知menu刷新列表数据
-          this.reqList();
-        }
+          this.cancel();
+          this.reqGoodsList();
+          this.reqGoodsCount();
+        });
       });
     },
     getOne(id) {
-      reqCateDetail(id).then((res) => {
+      reqGoodsDetail(id).then((res) => {
         this.goods = res.data.list;
-        this.imgUrl = this.$imgPre + this.goods.img;
         this.goods.id = id;
+        this.getSecondId();
+        this.imgUrl = this.$imgPre + this.goods.img;
+        this.goods.specsattr = this.goods.specsattr.split(",");
+        this.getSpecs();
+        if (this.editor) {
+          this.editor.txt.html(this.goods.description);
+        }
       });
     },
     edit() {
-      reqCateEdit(this.form).then((res) => {
-        if (res.data.code == 200) {
-          successAlert(res.data.msg);
-          this.cancel();
-          this.empty();
-          this.reqList();
-        }
+      this.check().then(() => {
+        reqGoodsUpdate(this.goods).then((res) => {
+          if (res.data.code == 200) {
+            successAlert(res.data.msg);
+            this.cancel();
+            this.empty();
+            this.reqGoodsList();
+          }
+        });
       });
     },
     // 13.form置空
     empty() {
-      this.form = {
-        pid: "",
-        catename: "",
+      this.goods = {
+        first_cateid: "",
+        second_cateid: "",
+        goodsname: "",
+        price: "",
+        market_price: "",
         img: null,
+        description: "",
+        specsid: "",
+        specsattr: [],
+        isnew: 1,
+        ishot: 1,
         status: 1,
       };
+      this.secondCateList = [];
+      //图片临时地址
+      this.imgUrl = "";
+      //规格属性list
+      this.attrsList = [];
     },
     cancel() {
       this.info.isShow = false;
@@ -185,22 +308,24 @@ export default {
       }
     },
     changeFile(e) {
-      console.log(e);
+      // console.log(e);
       let file = e.raw;
 
       this.imgUrl = URL.createObjectURL(file);
 
-      this.form.img = file;
+      this.goods.img = file;
     },
     opened() {
       this.editor = new E("#edit");
       this.editor.create();
-      // this.editor.txt.html(this.user.description);
+      this.editor.txt.html(this.goods.description);
     },
   },
   mounted() {
     // 请求一级分类列表
-    this.reqCateList();
+    this.reqcateList();
+    // 请求规格属性
+    this.reqspecsList(true);
   },
 };
 </script>

@@ -27,6 +27,12 @@ const actions = {
         //发请求，成功之后，修改list
         reqSpecsList(p).then(res => {
             let list = res.data.list ? res.data.list : []
+
+            if(list.length==0&&context.state.page>1){
+                context.commit("changePage",context.state.page-1)
+                context.dispatch("reqList");
+                return;
+            }
             list.forEach(item => {
                 item.attrs = JSON.parse(item.attrs)
             })
